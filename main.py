@@ -1,5 +1,8 @@
 import math
+import glob
+import os
 
+# --- Класи фігур ---
 class Figure:
     def area(self):
         raise NotImplementedError
@@ -35,9 +38,11 @@ class Trapeze(Figure):
     def area(self):
         # Формула площі через сторони (Брама-Грама)
         s = (self.a + self.b + self.c + self.d) / 2
+        if self.a == self.b:
+            return 0  # уникнення ділення на 0
         h = (2 / abs(self.a - self.b)) * math.sqrt(
             (s - self.a) * (s - self.b) * (s - self.a - self.c) * (s - self.a - self.d)
-        ) if self.a != self.b else 0
+        )
         return ((self.a + self.b) / 2) * h
 
     def perimeter(self):
@@ -62,48 +67,26 @@ class Circle(Figure):
 
     def perimeter(self):
         return 2 * math.pi * self.r
+
+# --- Парсер рядка ---
 def parse_figure(line):
     parts = line.strip().split()
     if not parts:
         return None
     name = parts[0]
     params = list(map(int, parts[1:]))
-    if name == "Triangle":
+    if name == "Triangle" and len(params) == 3:
         return Triangle(*params)
-    elif name == "Rectangle":
+    elif name == "Rectangle" and len(params) == 2:
         return Rectangle(*params)
-    elif name == "Trapeze":
+    elif name == "Trapeze" and len(params) == 4:
         return Trapeze(*params)
-    elif name == "Parallelogram":
+    elif name == "Parallelogram" and len(params) == 3:
         return Parallelogram(*params)
-    elif name == "Circle":
+    elif name == "Circle" and len(params) == 1:
         return Circle(*params)
     else:
         return None
-
-figures = []
-with open(r'c:\Users\Nosok\Downloads\input01 (1).txt', encoding='utf-8') as f:
-    for line in f:
-        fig = parse_figure(line)
-        if fig:
-            figures.append(fig)
-max_area = -1
-max_perimeter = -1
-max_area_figure = None
-max_perimeter_figure = None
-
-for fig in figures:
-    try:
-        area = fig.area()
-        perimeter = fig.perimeter()
-    except Exception:
-        continue
-    if area > max_area:
-        max_area = area
-        max_area_figure = fig
-    if perimeter > max_perimeter:
-        max_perimeter = perimeter
-        max_perimeter_figure = fig
 
 def figure_info(fig):
     if isinstance(fig, Triangle):
@@ -119,5 +102,39 @@ def figure_info(fig):
     else:
         return "Unknown figure"
 
-print("Figure with max area:", figure_info(max_area_figure), "Area:", max_area)
-print("Figure with max perimeter:", figure_info(max_perimeter_figure), "Perimeter:", max_perimeter)
+# --- Основна частина ---
+folder = r'c:\Users\Nosok\Downloads'
+patterns = ["input*.txt", "input* (1).txt"]
+files = []
+for pattern in patterns:
+    files.extend(glob.glob(os.path.join(folder, pattern)))
+
+for filename in files:
+    print(f"\nОбробка файлу: {os.path.basename(filename)}")
+    figures = []
+    with open(filename, encoding='utf-8') as f:
+        for line in f:
+            fig = parse_figure(line)
+            if fig:
+                figures.append(fig)
+
+    max_area = -1
+    max_perimeter = -1
+    max_area_figure = None
+    max_perimeter_figure = None
+
+    for fig in figures:
+        try:
+            area = fig.area()
+            perimeter = fig.perimeter()
+        except Exception:
+            continue
+        if area > max_area:
+            max_area = area
+            max_area_figure = fig
+        if perimeter > max_perimeter:
+            max_perimeter = perimeter
+            max_perimeter_figure = fig
+
+    print("Фігура з максимальною площею:", figure_info(max_area_figure), "Площа:", max_area)
+    print("Фігура з максимальним периметром:", figure_info(max_perimeter_figure), "Периметр:", max_perimeter)
